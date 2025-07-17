@@ -1,4 +1,4 @@
-[
+data_catalog = [
   {
     "database_name": "ATM",
     "database_description": "Stores details about ATM withdrawals, deposits, and machine interactions.",
