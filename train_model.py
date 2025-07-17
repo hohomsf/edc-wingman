@@ -20,19 +20,28 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 # COMMAND ----------
 
 def create_catalog_texts(data):
-    """Convert database metadata to text format for embedding"""
     catalog_texts = []
     catalog_metadata = []
-    
+
     for database in data:
         for table in database['tables']:
             for column in table['columns']:
-                # Create rich text description for each field
-                text = f"""Database: {database['database_name']} | Table: {table['table_name']} | Field: {column['field_name']} | Business Name: {column['business_name']} | Description: {column['business_description']} | Type: {column['data_type']} | Tags: {', '.join(column.get('tags', []))}"""
-                
+                tags = column.get('tags', [])
+                pii_note = "This field contains PII data." if "PII" in tags else ""
+                sample_values = ", ".join(column.get('sample_values', [])[:2])
+
+                # 🚀 More natural language, repeated keywords, and higher emphasis on user-searchable terms
+                text = (
+                    f"The field '{column['field_name']}' (Business name: {column['business_name']}) "
+                    f"in table '{table['table_name']}' from database '{database['database_name']}' "
+                    f"captures the following: {column['business_description']}. "
+                    f"It is a {column['data_type']} field. {pii_note} "
+                    f"Tags include: {', '.join(tags)}. "
+                    f"Sample values are: {sample_values}."
+                ).strip()
+
                 catalog_texts.append(text)
-                
-                # Store metadata for later retrieval
+
                 metadata = {
                     'database_name': database['database_name'],
                     'database_description': database['database_description'],
@@ -47,8 +56,26 @@ def create_catalog_texts(data):
                     'sample_values': column.get('sample_values', [])
                 }
                 catalog_metadata.append(metadata)
-    
+
     return catalog_texts, catalog_metadata
+
+# COMMAND ----------
+
+def deduplicate_catalog_entries(catalog_texts, catalog_metadata):
+    from collections import defaultdict
+
+    seen_fields = set()
+    dedup_texts = []
+    dedup_metadata = []
+
+    for text, meta in zip(catalog_texts, catalog_metadata):
+        key = (meta['database_name'], meta['table_name'], meta['field_name'])
+        if key not in seen_fields:
+            seen_fields.add(key)
+            dedup_texts.append(text)
+            dedup_metadata.append(meta)
+
+    return dedup_texts, dedup_metadata
 
 # COMMAND ----------
 
@@ -60,6 +87,10 @@ def main():
     # Create catalog texts for embedding
     print("Creating catalog texts...")
     catalog_texts, catalog_metadata = create_catalog_texts(data_catalog)
+
+    # ✅ Deduplicate
+    catalog_texts, catalog_metadata = deduplicate_catalog_entries(catalog_texts, catalog_metadata)
+    print(f"✅ Deduplicated to {len(catalog_texts)} unique fields")
     
     print(f"Generated {len(catalog_texts)} field descriptions")
     
