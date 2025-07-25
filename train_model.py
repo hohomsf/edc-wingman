@@ -25,15 +25,15 @@ def create_catalog_texts(data):
 
     for database in data:
         for table in database['tables']:
-            for column in table['columns']:
+            for column in table['fields']:
                 tags = column.get('tags', [])
                 pii_note = "This field contains PII data." if "PII" in tags else ""
-                sample_values = ", ".join(column.get('sample_values', [])[:2])
+                sample_values = ", ".join([str(sample_value) for sample_value in column.get('sample_values', [])][:2])
 
                 # 🚀 More natural language, repeated keywords, and higher emphasis on user-searchable terms
                 text = (
                     f"The field '{column['field_name']}' (Business name: {column['business_name']}) "
-                    f"in table '{table['table_name']}' from database '{database['database_name']}' "
+                    f"in table '{table['table_name']}' from database '{database['database_code']}' "
                     f"captures the following: {column['business_description']}. "
                     f"It is a {column['data_type']} field. {pii_note} "
                     f"Tags include: {', '.join(tags)}. "
@@ -43,7 +43,7 @@ def create_catalog_texts(data):
                 catalog_texts.append(text)
 
                 metadata = {
-                    'database_name': database['database_name'],
+                    'database_name': database['database_code'],
                     'database_description': database['database_description'],
                     'table_name': table['table_name'],
                     'table_description': table['table_description'],
@@ -53,7 +53,7 @@ def create_catalog_texts(data):
                     'data_type': column['data_type'],
                     'length': column.get('length'),
                     'tags': column.get('tags', []),
-                    'sample_values': column.get('sample_values', [])
+                    'sample_values': [str(sample_value) for sample_value in column.get('sample_values', [])]
                 }
                 catalog_metadata.append(metadata)
 
