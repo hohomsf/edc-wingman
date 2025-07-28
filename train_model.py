@@ -19,23 +19,43 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 
 # COMMAND ----------
 
+# Import the actual data
+from raw_data import data_catalog  # raw_data.py must define `data_catalog` as a Python list
+
+# COMMAND ----------
+
 def create_catalog_texts(data):
     catalog_texts = []
     catalog_metadata = []
 
     for database in data:
         for table in database['tables']:
+<<<<<<< HEAD
+            for field in table['fields']:  # 👈 renamed from 'columns' to 'fields'
+                tags = field.get('tags', [])
+                pii_note = "This field contains PII data." if "PII" in tags else ""
+                sample_values = ", ".join(str(val) for val in field.get('sample_values', [])[:2])
+=======
             for column in table['fields']:
                 tags = column.get('tags', [])
                 pii_note = "This field contains PII data." if "PII" in tags else ""
                 sample_values = ", ".join([str(sample_value) for sample_value in column.get('sample_values', [])][:2])
+>>>>>>> 574f643bc9cbfc420fa41cf03eaf612778b56b7a
 
-                # 🚀 More natural language, repeated keywords, and higher emphasis on user-searchable terms
+
+                # Create a descriptive natural-language text for semantic embedding
                 text = (
+<<<<<<< HEAD
+                    f"The field '{field['field_name']}' (Business name: {field['business_name']}) "
+                    f"in table '{table['table_name']}' from database '{database['database_code']}' "
+                    f"captures the following: {field['business_description']}. "
+                    f"It is a {field['data_type']} field. {pii_note} "
+=======
                     f"The field '{column['field_name']}' (Business name: {column['business_name']}) "
                     f"in table '{table['table_name']}' from database '{database['database_code']}' "
                     f"captures the following: {column['business_description']}. "
                     f"It is a {column['data_type']} field. {pii_note} "
+>>>>>>> 574f643bc9cbfc420fa41cf03eaf612778b56b7a
                     f"Tags include: {', '.join(tags)}. "
                     f"Sample values are: {sample_values}."
                 ).strip()
@@ -47,6 +67,15 @@ def create_catalog_texts(data):
                     'database_description': database['database_description'],
                     'table_name': table['table_name'],
                     'table_description': table['table_description'],
+<<<<<<< HEAD
+                    'field_name': field['field_name'],
+                    'business_name': field['business_name'],
+                    'business_description': field['business_description'],
+                    'data_type': field['data_type'],
+                    'length': field.get('length'),
+                    'tags': field.get('tags', []),
+                    'sample_values': field.get('sample_values', [])
+=======
                     'field_name': column['field_name'],
                     'business_name': column['business_name'],
                     'business_description': column['business_description'],
@@ -54,6 +83,7 @@ def create_catalog_texts(data):
                     'length': column.get('length'),
                     'tags': column.get('tags', []),
                     'sample_values': [str(sample_value) for sample_value in column.get('sample_values', [])]
+>>>>>>> 574f643bc9cbfc420fa41cf03eaf612778b56b7a
                 }
                 catalog_metadata.append(metadata)
 
